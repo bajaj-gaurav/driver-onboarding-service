@@ -14,8 +14,7 @@ public class ApplicationSecurityConfig {
         http
                 .csrf().disable()
                 .authorizeHttpRequests()
-                .antMatchers("/drivers/onboarding-status/verify-documents").authenticated()
-                .antMatchers("/drivers/onboarding-status/document-pending").authenticated()
+                .antMatchers("/drivers/onboarding/additional-info").authenticated()
                 .antMatchers("/drivers/profile").authenticated()
                 .antMatchers("/driver/documents").authenticated()
                 .anyRequest().permitAll()

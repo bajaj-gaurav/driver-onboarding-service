@@ -16,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class DocumentValidationTest {
 
     private static MultipartFile multipartFile;
+
     @Autowired
     private DocumentValidation documentValidation;
 

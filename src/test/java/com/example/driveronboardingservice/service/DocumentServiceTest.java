@@ -4,6 +4,7 @@ import com.example.driveronboardingservice.entity.DocumentCategory;
 import com.example.driveronboardingservice.entity.DocumentUpload;
 import com.example.driveronboardingservice.entity.DriverProfile;
 import com.example.driveronboardingservice.exception.ActionNotAllowedException;
+import com.example.driveronboardingservice.exception.DatabaseException;
 import com.example.driveronboardingservice.exception.InvalidInputException;
 import com.example.driveronboardingservice.infrastructure.output.FileUploadClient;
 import com.example.driveronboardingservice.repository.DocumentCategoryRepository;
@@ -54,19 +55,14 @@ class DocumentServiceTest {
         MultipartFile multipartFile = new MockMultipartFile("mockFile.pdf", "originalFileName.pdf", MediaType.TEXT_PLAIN_VALUE, "hello".getBytes());
 
         DriverProfile driverProfile = new DriverProfile();
-        driverProfile.setOnboardingStatus("abc");
+        driverProfile.setOnboardingStatus("DOCUMENT_PENDING");
+
         when(driverProfileRepository.findByEmail(any())).thenReturn(driverProfile);
-
         doNothing().when(documentValidation).isValidDocument(any());
-
         when(documentValidation.generateDocumentHash(any(), any())).thenReturn("abcd123");
-
         when(documentUploadRepository.findByFileHash(any())).thenReturn(null);
-
         when(documentCategoryRepository.findByName(any())).thenReturn(new DocumentCategory());
-
         when(documentUploadRepository.findByDriverProfileAndDocumentCategory(any(), any())).thenReturn(null);
-
         when(fileUploadClient.storeAndGetFileAddress(any(), any())).thenReturn("/c://somePath");
 
         DocumentUpload documentUpload = new DocumentUpload();
@@ -83,19 +79,13 @@ class DocumentServiceTest {
         MultipartFile multipartFile = new MockMultipartFile("mockFile.pdf", "originalFileName.pdf", MediaType.TEXT_PLAIN_VALUE, "hello".getBytes());
 
         DriverProfile driverProfile = new DriverProfile();
-        driverProfile.setOnboardingStatus("abc");
+        driverProfile.setOnboardingStatus("DOCUMENT_PENDING");
         when(driverProfileRepository.findByEmail(any())).thenReturn(driverProfile);
-
         doNothing().when(documentValidation).isValidDocument(any());
-
         when(documentValidation.generateDocumentHash(any(), any())).thenReturn("abcd123");
-
         when(documentUploadRepository.findByFileHash(any())).thenReturn(null);
-
         when(documentCategoryRepository.findByName(any())).thenReturn(new DocumentCategory());
-
         when(documentUploadRepository.findByDriverProfileAndDocumentCategory(any(), any())).thenReturn(new DocumentUpload());
-
         when(documentUploadRepository.updateDocument(any(), any(), any())).thenReturn(1);
 
         assertEquals("Document re-uploaded successfully", documentService.saveDocument(multipartFile, "samiksha", "address"));
@@ -107,22 +97,16 @@ class DocumentServiceTest {
         MultipartFile multipartFile = new MockMultipartFile("mockFile.pdf", "originalFileName.pdf", MediaType.TEXT_PLAIN_VALUE, "hello".getBytes());
 
         DriverProfile driverProfile = new DriverProfile();
-        driverProfile.setOnboardingStatus("abc");
+        driverProfile.setOnboardingStatus("DOCUMENT_PENDING");
         when(driverProfileRepository.findByEmail(any())).thenReturn(driverProfile);
 
         doNothing().when(documentValidation).isValidDocument(any());
-
         when(documentValidation.generateDocumentHash(any(), any())).thenReturn("abcd123");
-
         when(documentUploadRepository.findByFileHash(any())).thenReturn(null);
-
         when(documentCategoryRepository.findByName(any())).thenReturn(new DocumentCategory());
-
         when(documentUploadRepository.findByDriverProfileAndDocumentCategory(any(), any())).thenReturn(new DocumentUpload());
-
         when(documentUploadRepository.updateDocument(any(), any(), any())).thenReturn(0);
-
-        assertThrows(Exception.class, () -> documentService.saveDocument(multipartFile, "samiksha", "address"), " Error Uploading document. Please try again in a while");
+        assertThrows(DatabaseException.class, () -> documentService.saveDocument(multipartFile, "samiksha", "address"), " Error Uploading document. Please try again in a while");
 
     }
 
@@ -130,9 +114,7 @@ class DocumentServiceTest {
     public void testFailureUnknownUserSaveDocument() throws Exception {
 
         MultipartFile multipartFile = new MockMultipartFile("mockFile.pdf", "originalFileName.pdf", MediaType.TEXT_PLAIN_VALUE, "hello".getBytes());
-
         when(driverProfileRepository.findByEmail(any())).thenReturn(null);
-
         assertThrows(UsernameNotFoundException.class, () -> documentService.saveDocument(multipartFile, "samiksha", "address"), "Couldn't find the user samiksha");
 
     }
@@ -156,42 +138,34 @@ class DocumentServiceTest {
         MultipartFile multipartFile = new MockMultipartFile("mockFile.pdf", "originalFileName.pdf", MediaType.TEXT_PLAIN_VALUE, "hello".getBytes());
 
         DriverProfile driverProfile = new DriverProfile();
-        driverProfile.setOnboardingStatus("abc");
+        driverProfile.setOnboardingStatus("DOCUMENT_PENDING");
         when(driverProfileRepository.findByEmail(any())).thenReturn(driverProfile);
 
         doNothing().when(documentValidation).isValidDocument(any());
-
         when(documentValidation.generateDocumentHash(any(), any())).thenReturn("abcd123");
 
+        // This shouldn't return a document
         when(documentUploadRepository.findByFileHash(any())).thenReturn(new DocumentUpload());
-
         assertThrows(InvalidInputException.class, () -> documentService.saveDocument(multipartFile, "samiksha", "address"), "Duplicate file found");
     }
 
     @Test
-    public void testFailureSaveDocument() throws Exception {
+    public void testFailureSaveDocumentWithIdNull() throws Exception {
 
         MultipartFile multipartFile = new MockMultipartFile("mockFile.pdf", "originalFileName.pdf", MediaType.TEXT_PLAIN_VALUE, "hello".getBytes());
-
         DriverProfile driverProfile = new DriverProfile();
-        driverProfile.setOnboardingStatus("abc");
+        driverProfile.setOnboardingStatus("DOCUMENT_PENDING");
+
         when(driverProfileRepository.findByEmail(any())).thenReturn(driverProfile);
-
         doNothing().when(documentValidation).isValidDocument(any());
-
         when(documentValidation.generateDocumentHash(any(), any())).thenReturn("abcd123");
-
         when(documentUploadRepository.findByFileHash(any())).thenReturn(null);
-
         when(documentCategoryRepository.findByName(any())).thenReturn(new DocumentCategory());
-
         when(documentUploadRepository.findByDriverProfileAndDocumentCategory(any(), any())).thenReturn(null);
-
         when(fileUploadClient.storeAndGetFileAddress(any(), any())).thenReturn("/c://somePath");
-
         when(documentUploadRepository.save(any())).thenReturn(new DocumentUpload());
 
-        assertThrows(Exception.class, () -> documentService.saveDocument(multipartFile, "samiksha", "address"), "Error Uploading document. Please try again in a while");
+        assertThrows(DatabaseException.class, () -> documentService.saveDocument(multipartFile, "samiksha", "address"), "Error Uploading document. Please try again in a while");
     }
 
 }

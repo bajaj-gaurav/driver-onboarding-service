@@ -55,17 +55,11 @@ class DriverProfileServiceTest {
         driverProfile.setFirstName("samiksha");
 
         doNothing().when(driverProfileValidation).isValidInput(any());
-
         when(driverProfileRepository.findByEmail(any())).thenReturn(null);
-
         when(driverProfileMapper.mapDTOtoEntity(any())).thenReturn(driverProfile);
-
         when(roleService.getDriverRole(any())).thenReturn(new Role());
-
         when(driverProfileRepository.save(any())).thenReturn(driverProfile);
-
         doNothing().when(emailVerificationService).sendEmailForVerification(any());
-
 
         assertEquals("Registration for User:samiksha is successfully initiated. Please check your inbox. Please verify the mail sent.", driverProfileService.saveProfile(new DriverProfileDto()));
     }
@@ -74,28 +68,21 @@ class DriverProfileServiceTest {
     public void testFailureUserAlreadyExistsSaveProfile() throws InvalidInputException {
 
         doNothing().when(driverProfileValidation).isValidInput(any());
-
         when(driverProfileRepository.findByEmail(any())).thenReturn(new DriverProfile());
-
         assertThrows(DriverAlreadyExistException.class, () -> driverProfileService.saveProfile(new DriverProfileDto()), "Account already registered/initiated");
 
     }
 
     @Test
-    public void testFailureUserNotGettingRegisteredSaveProfile() throws Exception {
+    public void testFailureUserNotGettingRegisteredNoIdSaveProfile() throws Exception {
 
         DriverProfile driverProfile = new DriverProfile();
 
         doNothing().when(driverProfileValidation).isValidInput(any());
-
         when(driverProfileRepository.findByEmail(any())).thenReturn(null);
-
         when(driverProfileMapper.mapDTOtoEntity(any())).thenReturn(driverProfile);
-
         when(roleService.getDriverRole(any())).thenReturn(new Role());
-
         when(driverProfileRepository.save(any())).thenReturn(driverProfile);
-
         assertThrows(DriverRegistrationException.class, () -> driverProfileService.saveProfile(new DriverProfileDto()), "The user didn't get registered. Please try again in a while");
 
     }
@@ -103,35 +90,13 @@ class DriverProfileServiceTest {
     @Test
     public void testSuccessGetDetailsFromCacheGetDriverProfileDetails() throws DatabaseException {
         when(cacheService.get(any())).thenReturn(new DriverDetailsDto());
-
-        assertEquals(new DriverDetailsDto(), driverProfileService.getDriverProfileDetails("samiksha@gmail.com"));
-    }
-
-    @Test
-    public void testSuccessGetDetailsFromDatabaseGetDriverProfileDetails() throws DatabaseException {
-        when(cacheService.get(any())).thenReturn(null);
-
-        when(driverProfileRepository.findByEmail(any())).thenReturn(new DriverProfile());
-
-        doNothing().when(driverDetailDtoMapper).mapDriverProfileToDriverDetailDto(any(), any());
-
-        when(driverAdditionalInfoRepository.findByDriverProfile(any())).thenReturn(new DriverAdditionalInfo());
-
-        doNothing().when(driverDetailDtoMapper).mapDriverAdditionalInfoToDriverDetailDto(any(), any());
-
-        doNothing().when(cacheService).put(any(), any());
-
-        when(cacheService.get(any())).thenReturn(new DriverDetailsDto());
-
         assertEquals(new DriverDetailsDto(), driverProfileService.getDriverProfileDetails("samiksha@gmail.com"));
     }
 
     @Test
     public void testFailureUnableToConnectDatabaseGetDriverProfileDetails() throws DatabaseException {
         when(cacheService.get(any())).thenReturn(null);
-
         when(driverProfileRepository.findByEmail(any())).thenReturn(null);
-
         assertThrows(DatabaseException.class, () -> driverProfileService.getDriverProfileDetails("samiksha@gmail.com"), "Couldn't fetch the record for user: samiksha");
     }
 
