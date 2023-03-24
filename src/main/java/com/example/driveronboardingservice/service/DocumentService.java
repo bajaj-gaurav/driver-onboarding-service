@@ -86,6 +86,10 @@ public class DocumentService {
         isDuplicateDocument(documentHash);
 
         DocumentCategory docCategory = documentCategoryRepository.findByName(category);
+        if (docCategory == null) {
+            log.error("Category: {} doesn't exist", category);
+            throw new ActionNotAllowedException("Category doesn't exist");
+        }
         DocumentUpload documentUpload = documentUploadRepository.findByDriverProfileAndDocumentCategory(driverProfile, docCategory);
 
         String directoryPath = DIRECTORY_PATH + "/" + username + "/" + category;
